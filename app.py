@@ -1,46 +1,47 @@
 import streamlit as st
 import pandas as pd
 import duckdb
+import io
 
-st.write("""
-#SQL SRS
-Spaced Repetition System SQL practice
-""")
+csv = '''
+beverage,price
+orange juice,2.5
+Expresso,2
+'''
+beverages = pd.read_csv(io.StringIO(csv))
 
-option = st.selectbox(
-    "What would you like to review ?",
-    ("Join","GroupBy","Windows Functions"),
-    index=None,
-    placeholder = "Select contact method...",
-)
+csv2 = '''
+food_item,food_pice
+cookid juice,2.5
+chocolatine,2
+muffin,3
+'''
 
-st.write('You selected :', option)
+food_items = pd.read_csv(io.StringIO(csv2))
 
+answer = """
 
-data = {"a" : [1, 2, 3], "b" : [4, 5, 6]}
-df = pd.DataFrame(data)
+SELECT * FROM beverages
+CROSS JOIN food_items
+"""
 
-tab1, tab2, tab3 = st.tabs(['Cat', "Dog","Owl"])
+solution = duckdb.sql(answer).df()
+st.header("enter your code :")
+query = st.text_area(label = "entrez votre code SQL ici", key="user_input")
 
-with tab1:
-        sql_query = st.text_area(label = "entrez votre input")
-        if sql_query.strip():
-            try:
-                result = duckdb.query(sql_query).df()
-                st.write(f"Vous avez entré la requête suivante : {sql_query}")
-                st.dataframe(result)
-            except Exception as e:
-                st.error(f"Erreur lors de l'exécution de la requête : {e}")
-        else:
-            st.info("Veuillez entrer une requête SQL pour voir les résultats.")
+if query :
+    result = duckdb.sql(query).df()
+    st.dataframe(result)
 
+tab2, tab3 = st.tabs(["Tables","Solution"])
 
+with tab2:
+    st.write("table: beverages")
+    st.dataframe(beverages)
+    st.write("table : food_items")
+    st.dataframe(food_items)
+    st.write("expected:")
+    st.dataframe(solution)
 
-
-with tab2 :
-        st.header("A dog")
-        st.image("https://static.streamlit.io/examples/dog.jpg", width=200)
-
-with tab3 :
-        st.header("An owl")
-        st.image("https://static.streamlit.io/examples/owl.jpg",  width=200)
+with tab3:
+    st.write(answer)
